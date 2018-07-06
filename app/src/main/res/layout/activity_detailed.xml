@@ -1,9 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".DetailedActivity">
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp">
 
-</android.support.constraint.ConstraintLayout>
+    <ImageView
+        android:id="@+id/ivProfileImage"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        app:srcCompat="@android:color/black" />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/text"
+        android:layout_toRightOf="@+id/ivProfileImage">
+        <TextView
+            android:id="@+id/tvUserName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="TextView"
+            android:layout_marginLeft="5dp"
+            android:layout_alignParentTop="true"/>
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TextView"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"/>
+        <TextView
+            android:id="@+id/tvBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvUserName"
+            android:layout_marginLeft="5dp"
+            android:text="TextView"
+            android:minHeight="30dp"
+            android:layout_alignParentBottom="true"
+            android:autoLink="all"
+            android:linksClickable="true"
+            />
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/ivPicture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/text"
+        app:srcCompat="@android:color/transparent" />
+    <Button
+        android:id="@+id/bReply"
+        android:layout_below="@+id/ivPicture"
+        android:scaleType="fitXY"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/vector_reply"
+        />
+    <Button
+        android:id="@+id/bFavorite"
+        android:layout_below="@+id/ivPicture"
+        android:layout_toRightOf="@+id/bReply"
+        android:scaleType="fitXY"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:background="@drawable/ic_vector_heart"
+        />
+    <Button
+        android:id="@+id/bRetweet"
+        android:layout_below="@+id/ivPicture"
+        android:layout_toRightOf="@+id/bFavorite"
+        android:background="@drawable/ic_vector_retweet"
+        android:scaleType="fitXY"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        />
+</RelativeLayout>

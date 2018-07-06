@@ -2,6 +2,7 @@ package com.codepath.apps.restclienttemplate;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.format.DateUtils;
@@ -13,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.codepath.apps.restclienttemplate.models.Tweet;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 
 import org.parceler.Parcels;
 
@@ -21,13 +23,32 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import cz.msebera.android.httpclient.Header;
+
 public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.Viewholder>{
 
     private List<Tweet> mTweets;
     Context context;
+    TwitterClient client;
+    TimelineActivity timeline;
+    AsyncHttpResponseHandler handler = new AsyncHttpResponseHandler() {
+        @Override
+        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
 
-    public TweetAdapter(List<Tweet> tweets){
+        }
+
+        @Override
+        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+        }
+    };
+
+    public TweetAdapter(List<Tweet> tweets, TwitterClient client, TimelineActivity tl){
         mTweets = tweets;
+        this.client = client;
+        timeline = tl;
     }
 
     @NonNull
@@ -35,33 +56,85 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.Viewholder>{
     public Viewholder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
-
         View tweetView = inflater.inflate(R.layout.item_tweet, parent, false);
         Viewholder viewHolder = new Viewholder(tweetView);
-
         return viewHolder;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull Viewholder holder, int position) {
+    public void onBindViewHolder(@NonNull final Viewholder holder, int position) {
         final Tweet tweet = mTweets.get(position);
+        final Drawable heart = context.getResources().getDrawable(R.drawable.ic_vector_heart);
+        final Drawable empty = context.getResources().getDrawable(R.drawable.heart_empty);
+        final Drawable rt = context.getResources().getDrawable(R.drawable.ic_vector_retweet);
+        final Drawable rtg = context.getResources().getDrawable(R.drawable.retweet_green);
+
+        if(tweet.favorited)
+            holder.bFavorite.setBackground(heart);
+        else
+            holder.bFavorite.setBackground(empty);
+        if(tweet.retweeted)
+            holder.bRetweet.setBackground(rtg);
+        else
+            holder.bRetweet.setBackground(rt);
 
         holder.tvUsername.setText(tweet.user.name);
         holder.tvBody.setText(tweet.body);
+        holder.retweetCount.setText(""+tweet.retweetCount);
+        holder.favoriteCounter.setText(""+tweet.favoriteCount);
 
         GlideApp.with(context)
                 .load(tweet.user.profileImageUrl)
                 .into(holder.ivProfileImage);
-
+        holder.ivProfileImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent();
+                i.putExtra("user",Parcels.wrap(tweet.user));
+                context.startActivity(i);
+            }
+        });
         holder.tvTime.setText(getRelativeTimeAgo(tweet.createdAt));
-        holder.button3.setOnClickListener(new View.OnClickListener() {
+        holder.bReply.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                    Intent intent = new Intent(context, ComposeActivity.class);
-                    intent.putExtra("reply_id",tweet.uid);
-                    intent.putExtra("at",tweet.user.screenName);
-                    context.startActivity(intent);
+                    timeline.onComposeAction(tweet);
             }});
-        GlideApp.with(context).load(tweet.pic).into(holder.ivPic);
+        holder.bFavorite.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                client.favorite(tweet.uid,handler,tweet.favorited);
+                if(tweet.favorited) {
+                    holder.bFavorite.setBackground(empty);
+                    holder.favoriteCounter.setText(""+(Integer.parseInt(""+holder.favoriteCounter.getText().toString())-1) );
+                }
+                else
+                {
+                    holder.bFavorite.setBackground(heart);
+                    holder.favoriteCounter.setText(""+(Integer.parseInt(""+holder.favoriteCounter.getText().toString())+1) );
+                }
+                tweet.favorited = !tweet.favorited;
+            }
+        });
+        holder.bRetweet.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                client.retweet(tweet.uid,handler,tweet.retweeted);
+                if(tweet.retweeted) {
+                    holder.bRetweet.setBackground(rt);
+                    holder.retweetCount.setText(""+(Integer.parseInt(""+holder.retweetCount.getText().toString())-1) );
+                }
+                else
+                {
+                    holder.bRetweet.setBackground(rtg);
+                    holder.retweetCount.setText(""+(Integer.parseInt(""+holder.retweetCount.getText().toString())+1) );
+                }
+                tweet.retweeted = !tweet.retweeted;
+            }
+        });
+        if(tweet.pic == null)
+            holder.ivPic.setVisibility(View.GONE);
+        else
+            GlideApp.with(context).load(tweet.pic).into(holder.ivPic);
     }
 
     @Override
@@ -70,28 +143,28 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.Viewholder>{
     }
 
     public class Viewholder extends RecyclerView.ViewHolder implements View.OnClickListener{
-        public ImageView ivProfileImage;
-        public TextView tvUsername;
-        public TextView tvBody;
-        public TextView tvTime;
-        public Button button3;
-        public ImageView ivPic;
+        @BindView(R.id.ivProfileImage) ImageView ivProfileImage;
+        @BindView(R.id.tvUserName) TextView tvUsername;
+        @BindView(R.id.tvBody) TextView tvBody;
+        @BindView(R.id.tvTime) TextView tvTime;
+        @BindView(R.id.ivPicture) ImageView ivPic;
+        @BindView(R.id.bReply) Button bReply;
+        @BindView(R.id.bFavorite)  Button bFavorite;
+        @BindView(R.id.bRetweet) Button bRetweet;
+        @BindView(R.id.retweetCount) TextView retweetCount;
+        @BindView(R.id.favoriteCounter) TextView favoriteCounter;
 
         public Viewholder(View itemView){
             super(itemView);
-            ivProfileImage = itemView.findViewById(R.id.ivProfileImage);
-            tvUsername = itemView.findViewById(R.id.tvUserName);
-            tvBody = itemView.findViewById(R.id.tvBody);
-            tvTime = itemView.findViewById(R.id.tvTime);
-            button3 = itemView.findViewById(R.id.button3);
-            ivPic = itemView.findViewById(R.id.ivPicture);
+            ButterKnife.bind(this, itemView);
             itemView.setOnClickListener(this);
         }
-
         @Override
         public void onClick(View v) {
             Intent intent = new Intent(context, DetailedActivity.class);
             intent.putExtra("tweet", Parcels.wrap(mTweets.get(getAdapterPosition())));
+           // intent.putExtra("client",client);
+            //intent.putExtra("timeline",timeline);
             context.startActivity(intent);
         }
     }
@@ -117,7 +190,6 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.Viewholder>{
         notifyDataSetChanged();
     }
 
-    // Add a list of items -- change to type used
     public void addAll(List<Tweet> list) {
         mTweets.addAll(list);
         notifyDataSetChanged();
