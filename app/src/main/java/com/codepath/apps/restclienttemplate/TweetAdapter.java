@@ -89,7 +89,7 @@ public class TweetAdapter extends RecyclerView.Adapter<TweetAdapter.Viewholder>{
         holder.ivProfileImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent();
+                Intent i = new Intent(context,Profile.class);
                 i.putExtra("user",Parcels.wrap(tweet.user));
                 context.startActivity(i);
             }
