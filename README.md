@@ -60,6 +60,7 @@ Here's a walkthrough of implemented user stories:
 
 ![Walkthrough](video.gif)
 ![Walkthrough](video1.gif)
+![Walkthrough](video2.gif)
 
 
 GIF created with [LiceCap](http://www.cockos.com/licecap/).
